@@ -80,20 +80,21 @@ This will create three test users:
 
 3. Access the frontend at http://localhost:3000
 
+# User Ranking System Implementation (Part 4)
 
+## Overview
+This system implements an **optimized Firestore query** to rank users based on three primary criteria in descending order of importance:
 
-## User Ranking System Implementation (Part 4 Solution)
+1. **Total Average Weighted Ratings** (highest priority)
+2. **Number of Rents**
+3. **Recent Activity**
 
-### Problem Overview
-The task requires implementing an efficient Firestore query to rank users based on three criteria in order of priority:
-1. Total Average Weighted Ratings (highest priority)
-2. Number of Rents
-3. Recent Activity
+To achieve efficient querying, we have configured **Firestore composite indexes** and implemented an optimized query with pagination support.
 
-### Solution Implementation
+---
 
-#### Firestore Index Configuration
-We've implemented a composite index in `firestore.indexes.json` to support efficient querying:
+## 🔧 Firestore Index Configuration
+To support structured ranking, the following **composite index** is defined in `firestore.indexes.json`:
 
 ```json
 {
@@ -119,21 +120,37 @@ We've implemented a composite index in `firestore.indexes.json` to support effic
   ]
 }
 ```
+## 📌 Query Implementation  
+The ranking query is implemented in `apps/backend-repo/src/repository/userCollection.ts` using Firestore's `orderBy` method to respect the ranking hierarchy:
 
-#### Query Implementation
-The query is implemented in `apps/backend-repo/src/repository/userCollection.ts` using the following approach:
-
-1. **Ordering Strategy**: The query uses multiple orderBy clauses to respect the priority hierarchy:
 ```typescript
 collection
   .orderBy('totalAverageWeightRatings', 'desc')
   .orderBy('numberOfRents', 'desc')
-  .orderBy('recentlyActive', 'desc')
+  .orderBy('recentlyActive', 'desc');
 ```
 
-2. **Pagination Support**: 
-- Implemented using Firestore's `startAfter` and `limit` methods
-- The lastDoc cursor approach ensures efficient pagination without loading the entire dataset
+## 🔄 Pagination Support  
+To improve efficiency and scalability, pagination is implemented using Firestore's `startAfter` and `limit` methods:
+
+```typescript
+const fetchRankedUsers = async (
+  lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null, 
+  limit: number
+) => {
+  let query = collection
+    .orderBy('totalAverageWeightRatings', 'desc')
+    .orderBy('numberOfRents', 'desc')
+    .orderBy('recentlyActive', 'desc')
+    .limit(limit);
+
+  if (lastDoc) {
+    query = query.startAfter(lastDoc);
+  }
+
+  return await query.get();
+};
+```
 
 #### Performance Considerations
 - The composite index ensures efficient querying with O(log n) complexity
