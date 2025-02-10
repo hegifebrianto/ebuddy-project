@@ -1,0 +1,28 @@
+{
+  "name": "ebuddy-app",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "start": "turbo start",
+    "start:emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
+    "seed": "cd apps/backend-repo && npm run seed",
+    "dev:all": "turbo dev --parallel",
+    "init:dev": "npm run dev:all && npm run seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.4.0",
+    "typescript": "5.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
